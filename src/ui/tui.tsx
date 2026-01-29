@@ -5,23 +5,35 @@ import path from "path";
 import { analyzeRepo, RepoAnalysis } from "../services/analyzer";
 import { generateCopilotInstructions } from "../services/instructions";
 import { runEval, type EvalResult } from "../services/evaluator";
+import { AnimatedBanner, StaticBanner } from "./AnimatedBanner";
 
 type Props = {
   repoPath: string;
+  skipAnimation?: boolean;
 };
 
-type Status = "idle" | "analyzing" | "generating" | "evaluating" | "preview" | "done" | "error";
+type Status = "intro" | "idle" | "analyzing" | "generating" | "evaluating" | "preview" | "done" | "error";
 
-export function PrimerTui({ repoPath }: Props): React.JSX.Element {
+export function PrimerTui({ repoPath, skipAnimation = false }: Props): React.JSX.Element {
   const app = useApp();
-  const [status, setStatus] = useState<Status>("idle");
+  const [status, setStatus] = useState<Status>(skipAnimation ? "idle" : "intro");
   const [analysis, setAnalysis] = useState<RepoAnalysis | null>(null);
   const [message, setMessage] = useState<string>("");
   const [generatedContent, setGeneratedContent] = useState<string>("");
   const [evalResults, setEvalResults] = useState<EvalResult[] | null>(null);
   const repoLabel = useMemo(() => repoPath, [repoPath]);
 
+  const handleAnimationComplete = () => {
+    setStatus("idle");
+  };
+
   useInput(async (input: string, key: Key) => {
+    // During intro animation, any key skips it
+    if (status === "intro") {
+      setStatus("idle");
+      return;
+    }
+
     if (key.escape || input.toLowerCase() === "q") {
       app.exit();
       return;
@@ -124,7 +136,7 @@ export function PrimerTui({ repoPath }: Props): React.JSX.Element {
     }
   });
 
-  const statusLabel = status === "idle" ? "ready (awaiting input)" : status;
+  const statusLabel = status === "intro" ? "..." : status === "idle" ? "ready (awaiting input)" : status;
 
   // Truncate preview to fit terminal
   const previewLines = generatedContent.split("\n").slice(0, 20);
@@ -132,24 +144,11 @@ export function PrimerTui({ repoPath }: Props): React.JSX.Element {
 
   return (
     <Box flexDirection="column" padding={1} borderStyle="round">
-      <Text color="magenta" bold>
-        ██████╗ ██████╗ ██╗███╗   ███╗███████╗██████╗
-      </Text>
-      <Text color="magenta" bold>
-        ██╔══██╗██╔══██╗██║████╗ ████║██╔════╝██╔══██╗
-      </Text>
-      <Text color="magenta" bold>
-        ██████╔╝██████╔╝██║██╔████╔██║█████╗  ██████╔╝
-      </Text>
-      <Text color="magenta" bold>
-        ██╔═══╝ ██╔══██╗██║██║╚██╔╝██║██╔══╝  ██╔══██╗
-      </Text>
-      <Text color="magenta" bold>
-        ██║     ██║  ██║██║██║ ╚═╝ ██║███████╗██║  ██║
-      </Text>
-      <Text color="magenta" bold>
-        ╚═╝     ╚═╝  ╚═╝╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝
-      </Text>
+      {status === "intro" ? (
+        <AnimatedBanner onComplete={handleAnimationComplete} />
+      ) : (
+        <StaticBanner />
+      )}
       <Text color="cyan">Prime your repo for AI.</Text>
       <Text color="gray">Repo: {repoLabel}</Text>
       <Box flexDirection="column" marginTop={1}>
@@ -182,7 +181,9 @@ export function PrimerTui({ repoPath }: Props): React.JSX.Element {
         </Box>
       )}
       <Box marginTop={1}>
-        {status === "preview" ? (
+        {status === "intro" ? (
+          <Text color="gray">Press any key to skip animation...</Text>
+        ) : status === "preview" ? (
           <Text color="cyan">Keys: [S] Save  [D] Discard  [Q] Quit</Text>
         ) : (
           <Text color="cyan">Keys: [A] Analyze  [G] Generate  [E] Eval  [Q] Quit</Text>

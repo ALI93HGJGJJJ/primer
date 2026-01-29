@@ -11,7 +11,7 @@
       "withoutInstructions": "This application, Primer, is a CLI tool that analyzes your codebase and generates `.github/copilot-instructions.md` files to help AI coding assistants (like Copilot) better understand your project. It detects languages, frameworks, and package managers, and uses the Copilot SDK to generate project-specific instructions. \n\n**Main entrypoints:**\n- `src/index.ts`: Primary entrypoint for the CLI.\n- `src/cli.ts`: Sets up the command-line interface using Commander.\n- `src/commands/`: Contains subcommands for analyze, generate, and instructions.\n- `src/ui/tui.tsx`: Entry for the interactive terminal UI (TUI).",
       "verdict": "pass",
       "score": 100,
-      "rationale": "Both responses mention the CLI entrypoint in src/index.ts and that this is the Primer CLI. Response B is slightly more complete, but both meet the expectation."
+      "rationale": "Both responses mention the foCLI entrypoint in src/index.ts and that this is the Primer CLI. Response B is slightly more complete, but both meet the expectation."
     }
   ]
 }

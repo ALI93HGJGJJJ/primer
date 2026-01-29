@@ -58,6 +58,7 @@ export function runCli(argv: string[]): void {
   program
     .command("tui")
     .option("--repo <path>", "Repository path", process.cwd())
+    .option("--no-animation", "Skip the animated banner intro")
     .action(tuiCommand);
 
   program

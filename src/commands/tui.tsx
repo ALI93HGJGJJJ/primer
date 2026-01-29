@@ -5,10 +5,12 @@ import { PrimerTui } from "../ui/tui";
 
 type TuiOptions = {
   repo?: string;
+  animation?: boolean;
 };
 
 export async function tuiCommand(options: TuiOptions): Promise<void> {
   const repoPath = path.resolve(options.repo ?? process.cwd());
-  const { waitUntilExit } = render(<PrimerTui repoPath={repoPath} />);
+  const skipAnimation = options.animation === false;
+  const { waitUntilExit } = render(<PrimerTui repoPath={repoPath} skipAnimation={skipAnimation} />);
   await waitUntilExit();
 }
