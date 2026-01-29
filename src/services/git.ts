@@ -40,7 +40,25 @@ export async function commitAll(repoPath: string, message: string): Promise<void
   await git.commit(message);
 }
 
-export async function pushBranch(repoPath: string, branch: string): Promise<void> {
+export async function pushBranch(repoPath: string, branch: string, token?: string): Promise<void> {
   const git = simpleGit(repoPath);
+  
+  if (token) {
+    // Set up credentials for this push
+    const remoteUrl = (await git.remote(["get-url", "origin"])) ?? "";
+    const trimmedUrl = remoteUrl.trim();
+    if (trimmedUrl.startsWith("https://")) {
+      const authedUrl = trimmedUrl.replace("https://", `https://x-access-token:${token}@`);
+      await git.remote(["set-url", "origin", authedUrl]);
+      try {
+        await git.push(["-u", "origin", branch]);
+      } finally {
+        // Restore original URL to avoid leaking token
+        await git.remote(["set-url", "origin", trimmedUrl]);
+      }
+      return;
+    }
+  }
+  
   await git.push(["-u", "origin", branch]);
 }

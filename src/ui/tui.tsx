@@ -6,13 +6,15 @@ import { analyzeRepo, RepoAnalysis } from "../services/analyzer";
 import { generateCopilotInstructions } from "../services/instructions";
 import { runEval, type EvalResult } from "../services/evaluator";
 import { AnimatedBanner, StaticBanner } from "./AnimatedBanner";
+import { BatchTui } from "./BatchTui";
+import { getGitHubToken } from "../services/github";
 
 type Props = {
   repoPath: string;
   skipAnimation?: boolean;
 };
 
-type Status = "intro" | "idle" | "analyzing" | "generating" | "evaluating" | "preview" | "done" | "error";
+type Status = "intro" | "idle" | "analyzing" | "generating" | "evaluating" | "preview" | "done" | "error" | "batch";
 
 export function PrimerTui({ repoPath, skipAnimation = false }: Props): React.JSX.Element {
   const app = useApp();
@@ -21,6 +23,7 @@ export function PrimerTui({ repoPath, skipAnimation = false }: Props): React.JSX
   const [message, setMessage] = useState<string>("");
   const [generatedContent, setGeneratedContent] = useState<string>("");
   const [evalResults, setEvalResults] = useState<EvalResult[] | null>(null);
+  const [batchToken, setBatchToken] = useState<string | null>(null);
   const repoLabel = useMemo(() => repoPath, [repoPath]);
 
   const handleAnimationComplete = () => {
@@ -103,6 +106,20 @@ export function PrimerTui({ repoPath, skipAnimation = false }: Props): React.JSX
       }
     }
 
+    if (input.toLowerCase() === "b") {
+      setStatus("analyzing");
+      setMessage("Checking GitHub authentication...");
+      const token = await getGitHubToken();
+      if (!token) {
+        setStatus("error");
+        setMessage("GitHub auth required. Run 'gh auth login' or set GITHUB_TOKEN.");
+        return;
+      }
+      setBatchToken(token);
+      setStatus("batch");
+      return;
+    }
+
     if (input.toLowerCase() === "e") {
       const configPath = path.join(repoPath, "primer.eval.json");
       try {
@@ -141,6 +158,11 @@ export function PrimerTui({ repoPath, skipAnimation = false }: Props): React.JSX
   // Truncate preview to fit terminal
   const previewLines = generatedContent.split("\n").slice(0, 20);
   const truncatedPreview = previewLines.join("\n") + (generatedContent.split("\n").length > 20 ? "\n..." : "");
+
+  // Render BatchTui when in batch mode
+  if (status === "batch" && batchToken) {
+    return <BatchTui token={batchToken} />;
+  }
 
   return (
     <Box flexDirection="column" padding={1} borderStyle="round">
@@ -186,7 +208,7 @@ export function PrimerTui({ repoPath, skipAnimation = false }: Props): React.JSX
         ) : status === "preview" ? (
           <Text color="cyan">Keys: [S] Save  [D] Discard  [Q] Quit</Text>
         ) : (
-          <Text color="cyan">Keys: [A] Analyze  [G] Generate  [E] Eval  [Q] Quit</Text>
+          <Text color="cyan">Keys: [A] Analyze  [G] Generate  [E] Eval  [B] Batch  [Q] Quit</Text>
         )}
       </Box>
     </Box>

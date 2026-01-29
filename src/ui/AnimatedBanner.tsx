@@ -85,7 +85,6 @@ export function AnimatedBanner({
         if (next >= FRAMES.length) {
           clearInterval(interval);
           setIsComplete(true);
-          onComplete?.();
           return FRAMES.length - 1;
         }
         return next;
@@ -93,7 +92,14 @@ export function AnimatedBanner({
     }, FRAME_DURATION);
 
     return () => clearInterval(interval);
-  }, [skipAnimation, isComplete, onComplete]);
+  }, [skipAnimation, isComplete]);
+
+  // Call onComplete in a separate effect to avoid setState during render
+  useEffect(() => {
+    if (isComplete && !skipAnimation) {
+      onComplete?.();
+    }
+  }, [isComplete, skipAnimation, onComplete]);
 
   const currentFrame = FRAMES[frameIndex];
   const showSparkles = frameIndex < 3;

@@ -9,6 +9,7 @@ import { configCommand } from "./commands/config";
 import { evalCommand } from "./commands/eval";
 import { tuiCommand } from "./commands/tui";
 import { instructionsCommand } from "./commands/instructions";
+import { batchCommand } from "./commands/batch";
 
 export function runCli(argv: string[]): void {
   const program = new Command();
@@ -67,6 +68,12 @@ export function runCli(argv: string[]): void {
     .option("--output <path>", "Output path for copilot instructions")
     .option("--model <name>", "Model for instructions generation", "gpt-5")
     .action(instructionsCommand);
+
+  program
+    .command("batch")
+    .description("Batch process multiple repos across orgs")
+    .option("--output <path>", "Write results JSON to file")
+    .action(batchCommand);
 
   program.command("templates").action(templatesCommand);
   program.command("update").action(updateCommand);
