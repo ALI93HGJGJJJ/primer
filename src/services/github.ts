@@ -36,6 +36,7 @@ export type GitHubRepo = {
   cloneUrl: string;
   isPrivate: boolean;
   defaultBranch: string;
+  hasInstructions?: boolean;
 };
 
 export function createGitHubClient(token: string): Octokit {
@@ -135,4 +136,49 @@ export async function listOrgRepos(token: string, org: string, limit = 100): Pro
     isPrivate: repo.private,
     defaultBranch: repo.default_branch ?? "main"
   }));
+}
+
+/**
+ * Check if a repo has .github/copilot-instructions.md
+ */
+export async function checkRepoHasInstructions(token: string, owner: string, repo: string): Promise<boolean> {
+  const client = createGitHubClient(token);
+  try {
+    await client.rest.repos.getContent({
+      owner,
+      repo,
+      path: ".github/copilot-instructions.md"
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check multiple repos for instructions in parallel (with concurrency limit)
+ */
+export async function checkReposForInstructions(
+  token: string, 
+  repos: GitHubRepo[], 
+  onProgress?: (checked: number, total: number) => void
+): Promise<GitHubRepo[]> {
+  const concurrency = 10;
+  const results: GitHubRepo[] = [];
+  let checked = 0;
+
+  for (let i = 0; i < repos.length; i += concurrency) {
+    const batch = repos.slice(i, i + concurrency);
+    const checks = await Promise.all(
+      batch.map(async (repo) => {
+        const hasInstructions = await checkRepoHasInstructions(token, repo.owner, repo.name);
+        return { ...repo, hasInstructions };
+      })
+    );
+    results.push(...checks);
+    checked += batch.length;
+    onProgress?.(checked, repos.length);
+  }
+
+  return results;
 }

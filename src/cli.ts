@@ -66,7 +66,7 @@ export function runCli(argv: string[]): void {
     .command("instructions")
     .option("--repo <path>", "Repository path", process.cwd())
     .option("--output <path>", "Output path for copilot instructions")
-    .option("--model <name>", "Model for instructions generation", "gpt-5")
+    .option("--model <name>", "Model for instructions generation", "gpt-4.1")
     .action(instructionsCommand);
 
   program
