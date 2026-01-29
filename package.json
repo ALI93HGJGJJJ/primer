@@ -1,0 +1,34 @@
+{
+  "name": "primer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@github/copilot-sdk": "^0.1.19",
+    "@inquirer/prompts": "^8.2.0",
+    "@octokit/rest": "^22.0.1",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.2",
+    "fast-glob": "^3.3.3",
+    "ink": "^6.6.0",
+    "react": "^19.2.4",
+    "simple-git": "^3.30.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.1.0",
+    "@types/react": "^19.2.10",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "type": "module",
+  "bin": {
+    "primer": "dist/index.js"
+  }
+}

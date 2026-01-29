@@ -1,0 +1,149 @@
+import React, { useMemo, useState } from "react";
+import { Box, Key, Text, useApp, useInput } from "ink";
+import fs from "fs/promises";
+import path from "path";
+import { analyzeRepo, RepoAnalysis } from "../services/analyzer";
+import { generateCopilotInstructions } from "../services/instructions";
+
+type Props = {
+  repoPath: string;
+};
+
+type Status = "idle" | "analyzing" | "generating" | "preview" | "done" | "error";
+
+export function PrimerTui({ repoPath }: Props): React.JSX.Element {
+  const app = useApp();
+  const [status, setStatus] = useState<Status>("idle");
+  const [analysis, setAnalysis] = useState<RepoAnalysis | null>(null);
+  const [message, setMessage] = useState<string>("");
+  const [generatedContent, setGeneratedContent] = useState<string>("");
+  const repoLabel = useMemo(() => repoPath, [repoPath]);
+
+  useInput(async (input: string, key: Key) => {
+    if (key.escape || input.toLowerCase() === "q") {
+      app.exit();
+      return;
+    }
+
+    // In preview mode, handle save/discard
+    if (status === "preview") {
+      if (input.toLowerCase() === "s") {
+        try {
+          const outputPath = path.join(repoPath, ".github", "copilot-instructions.md");
+          await fs.mkdir(path.dirname(outputPath), { recursive: true });
+          await fs.writeFile(outputPath, generatedContent, "utf8");
+          setStatus("done");
+          setMessage("Saved to .github/copilot-instructions.md");
+          setGeneratedContent("");
+        } catch (error) {
+          setStatus("error");
+          setMessage(error instanceof Error ? error.message : "Failed to save.");
+        }
+        return;
+      }
+      if (input.toLowerCase() === "d") {
+        setStatus("idle");
+        setMessage("Discarded generated instructions.");
+        setGeneratedContent("");
+        return;
+      }
+      return;
+    }
+
+    if (input.toLowerCase() === "a") {
+      setStatus("analyzing");
+      try {
+        const result = await analyzeRepo(repoPath);
+        setAnalysis(result);
+        setStatus("done");
+        setMessage("Analysis complete.");
+      } catch (error) {
+        setStatus("error");
+        setMessage(error instanceof Error ? error.message : "Analysis failed.");
+      }
+      return;
+    }
+
+    if (input.toLowerCase() === "g") {
+      setStatus("generating");
+      setMessage("Starting generation...");
+      try {
+        const content = await generateCopilotInstructions({ 
+          repoPath,
+          onProgress: (msg) => setMessage(msg),
+        });
+        if (!content.trim()) {
+          throw new Error("Copilot SDK returned empty instructions.");
+        }
+        setGeneratedContent(content);
+        setStatus("preview");
+        setMessage("Review the generated instructions below.");
+      } catch (error) {
+        setStatus("error");
+        const message = error instanceof Error ? error.message : "Generation failed.";
+        if (message.toLowerCase().includes("auth") || message.toLowerCase().includes("login")) {
+          setMessage(`${message} Run 'copilot' then '/login' in a separate terminal.`);
+        } else {
+          setMessage(message);
+        }
+      }
+    }
+  });
+
+  const statusLabel = status === "idle" ? "ready (awaiting input)" : status;
+
+  // Truncate preview to fit terminal
+  const previewLines = generatedContent.split("\n").slice(0, 20);
+  const truncatedPreview = previewLines.join("\n") + (generatedContent.split("\n").length > 20 ? "\n..." : "");
+
+  return (
+    <Box flexDirection="column" padding={1} borderStyle="round">
+      <Text color="magenta" bold>
+        ██████╗ ██████╗ ██╗███╗   ███╗███████╗██████╗
+      </Text>
+      <Text color="magenta" bold>
+        ██╔══██╗██╔══██╗██║████╗ ████║██╔════╝██╔══██╗
+      </Text>
+      <Text color="magenta" bold>
+        ██████╔╝██████╔╝██║██╔████╔██║█████╗  ██████╔╝
+      </Text>
+      <Text color="magenta" bold>
+        ██╔═══╝ ██╔══██╗██║██║╚██╔╝██║██╔══╝  ██╔══██╗
+      </Text>
+      <Text color="magenta" bold>
+        ██║     ██║  ██║██║██║ ╚═╝ ██║███████╗██║  ██║
+      </Text>
+      <Text color="magenta" bold>
+        ╚═╝     ╚═╝  ╚═╝╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝
+      </Text>
+      <Text color="cyan">Prime your repo for AI.</Text>
+      <Text color="gray">Repo: {repoLabel}</Text>
+      <Box flexDirection="column" marginTop={1}>
+        <Text>Status: {statusLabel}</Text>
+        {analysis && (
+          <Box flexDirection="column" marginTop={1}>
+            <Text>Languages: {analysis.languages.join(", ") || "unknown"}</Text>
+            <Text>Frameworks: {analysis.frameworks.join(", ") || "none"}</Text>
+            <Text>Package manager: {analysis.packageManager ?? "unknown"}</Text>
+          </Box>
+        )}
+      </Box>
+      <Box marginTop={1}>
+        <Text>{message}</Text>
+      </Box>
+      {status === "preview" && generatedContent && (
+        <Box flexDirection="column" marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
+          <Text color="cyan" bold>Preview (.github/copilot-instructions.md):</Text>
+          <Text color="gray">{truncatedPreview}</Text>
+        </Box>
+      )}
+      <Box marginTop={1}>
+        {status === "preview" ? (
+          <Text color="cyan">Keys: [S] Save  [D] Discard  [Q] Quit</Text>
+        ) : (
+          <Text color="cyan">Keys: [A] Analyze  [G] Generate  [Q] Quit</Text>
+        )}
+      </Box>
+    </Box>
+  );
+}

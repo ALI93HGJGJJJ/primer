@@ -1,0 +1,10 @@
+{
+  "instructionFile": ".github/copilot-instructions.md",
+  "cases": [
+    {
+      "id": "overview",
+      "prompt": "Summarize what this application does and list the main entrypoints.",
+      "expectation": "Mentions the CLI entrypoint in src/index.ts and that this is the Primer CLI."
+    }
+  ]
+}
