@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import simpleGit from "simple-git";
+import simpleGit, { SimpleGitProgressEvent } from "simple-git";
 
 export async function isGitRepo(repoPath: string): Promise<boolean> {
   try {
@@ -17,9 +17,34 @@ export async function getRepoRoot(repoPath: string): Promise<string> {
   return root.trim();
 }
 
-export async function cloneRepo(repoUrl: string, destination: string): Promise<void> {
-  const git = simpleGit();
-  await git.clone(repoUrl, destination);
+export type CloneOptions = {
+  shallow?: boolean;
+  timeoutMs?: number;
+  onProgress?: (stage: string, progress: number) => void;
+};
+
+export async function cloneRepo(
+  repoUrl: string, 
+  destination: string,
+  options: CloneOptions = {}
+): Promise<void> {
+  const { shallow = true, timeoutMs = 60000, onProgress } = options;
+  
+  const git = simpleGit({
+    progress: onProgress ? ({ stage, progress }: SimpleGitProgressEvent) => {
+      onProgress(stage, progress);
+    } : undefined,
+    timeout: {
+      block: timeoutMs
+    }
+  });
+
+  const cloneArgs: string[] = [];
+  if (shallow) {
+    cloneArgs.push("--depth", "1");
+  }
+
+  await git.clone(repoUrl, destination, cloneArgs);
 }
 
 export async function checkoutBranch(repoPath: string, branch: string): Promise<void> {
@@ -40,21 +65,33 @@ export async function commitAll(repoPath: string, message: string): Promise<void
   await git.commit(message);
 }
 
+/** Normalize a git URL by removing trailing slashes and any existing auth */
+function normalizeGitUrl(url: string): string {
+  let normalized = url.trim();
+  // Remove trailing slashes
+  while (normalized.endsWith("/")) {
+    normalized = normalized.slice(0, -1);
+  }
+  // Remove any existing x-access-token auth
+  normalized = normalized.replace(/https:\/\/x-access-token:[^@]+@/, "https://");
+  return normalized;
+}
+
 export async function pushBranch(repoPath: string, branch: string, token?: string): Promise<void> {
   const git = simpleGit(repoPath);
   
   if (token) {
     // Set up credentials for this push
     const remoteUrl = (await git.remote(["get-url", "origin"])) ?? "";
-    const trimmedUrl = remoteUrl.trim();
-    if (trimmedUrl.startsWith("https://")) {
-      const authedUrl = trimmedUrl.replace("https://", `https://x-access-token:${token}@`);
+    const normalizedUrl = normalizeGitUrl(remoteUrl);
+    if (normalizedUrl.startsWith("https://")) {
+      const authedUrl = normalizedUrl.replace("https://", `https://x-access-token:${token}@`);
       await git.remote(["set-url", "origin", authedUrl]);
       try {
         await git.push(["-u", "origin", branch]);
       } finally {
         // Restore original URL to avoid leaking token
-        await git.remote(["set-url", "origin", trimmedUrl]);
+        await git.remote(["set-url", "origin", normalizedUrl]);
       }
       return;
     }

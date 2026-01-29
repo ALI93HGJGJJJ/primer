@@ -11,7 +11,7 @@ import {
   listAccessibleRepos,
   checkReposForInstructions
 } from "../services/github";
-import { cloneRepo, checkoutBranch, commitAll, pushBranch, isGitRepo } from "../services/git";
+import { cloneRepo, checkoutBranch, commitAll, pushBranch, isGitRepo, CloneOptions } from "../services/git";
 import { generateCopilotInstructions } from "../services/instructions";
 import { ensureDir } from "../utils/fs";
 import { StaticBanner } from "./AnimatedBanner";
@@ -158,9 +158,16 @@ export function BatchTui({ token, outputPath }: Props): React.JSX.Element {
         await ensureDir(repoPath);
 
         if (!(await isGitRepo(repoPath))) {
-          // Add auth to clone URL
-          const authedUrl = repo.cloneUrl.replace("https://", `https://x-access-token:${token}@`);
-          await cloneRepo(authedUrl, repoPath);
+          // Add auth to clone URL (strip trailing slashes first)
+          const cleanUrl = repo.cloneUrl.replace(/\/+$/, "");
+          const authedUrl = cleanUrl.replace("https://", `https://x-access-token:${token}@`);
+          await cloneRepo(authedUrl, repoPath, {
+            shallow: true,
+            timeoutMs: 120000, // 2 minute timeout for clone
+            onProgress: (stage, progress) => {
+              setProcessingMessage(`[${i + 1}/${selectedRepos.length}] ${repo.fullName}: Cloning (${stage} ${progress}%)...`);
+            }
+          });
         }
 
         // Branch
